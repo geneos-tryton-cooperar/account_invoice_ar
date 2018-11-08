@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="invoice_view_form">
+            <field name="model">account.invoice</field>
+            <field name="type">form</field>
+            <field name="inherit" ref="account_invoice.invoice_view_form"/>
+            <field name="name">invoice_form</field>
+        </record>
+        <record model="ir.ui.view" id="invoice_view_tree">
+            <field name="model">account.invoice</field>
+            <field name="type">tree</field>
+            <field name="inherit" ref="account_invoice.invoice_view_tree"/>
+            <field name="name">invoice_tree</field>
+        </record>
+        <record model="ir.ui.view" id="afip_transaction_view_tree">
+            <field name="model">account_invoice_ar.afip_transaction</field>
+            <field name="type">tree</field>
+            <field name="name">transaction_tree</field>
+        </record>
+        <record model="ir.ui.view" id="afip_transaction_view_form">
+            <field name="model">account_invoice_ar.afip_transaction</field>
+            <field name="type">form</field>
+            <field name="name">transaction_form</field>
+        </record>
+
+        <!--
+        <record model="ir.action.report" id="account_invoice.report_invoice">
+          <field name="active" eval="False"/>
+        </record>
+        -->
+
+        <record model="ir.action.report" id="account_invoice.report_invoice">
+            <field name="active" eval="True"/>
+            <field name="name">Invoice</field>
+            <field name="model">account.invoice</field>
+            <field name="report_name">account.invoice</field>
+            <field name="report">account_invoice_ar/invoice.odt</field>
+            <field name="style">account_invoice_ar/header_A4.odt</field>
+            <field name="template_extension">odt</field>
+            <field name="extension">sxw</field>
+        </record>
+    </data>
+</tryton>
