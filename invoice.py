@@ -430,13 +430,11 @@ class Invoice:
 				if invoice.pos:
 					if invoice.pos.pos_type == 'electronic':
 						invoice.do_pyafipws_request_cae()
-						
 						if not invoice.pyafipws_cae:
 							invoice.raise_user_error('not_cae')
 			invoice.set_number()
 			if invoice.pos.pos_type == 'electronic':
 				invoice.crear_codigo_qr()
-
 			moves.append(invoice.create_move())
 		cls.write(invoices, {
 				'state': 'posted',
@@ -507,6 +505,7 @@ class Invoice:
 		ws.Token = auth_data['token']
 		ws.Sign = auth_data['sign']
 
+
 		# get the last 8 digit of the invoice number
 		if self.move:
 			cbte_nro = int(self.move.number[-8:])
@@ -522,10 +521,11 @@ class Invoice:
 			cbte_nro_afip = ws.GetLastCMP(tipo_cbte, punto_vta)
 		cbte_nro_next = int(cbte_nro_afip or 0) + 1
 		# verify that the invoice is the next one to be registered in AFIP
-		#if cbte_nro != cbte_nro_next:
-		#	self.raise_user_error('invalid_invoice_number', (cbte_nro, cbte_nro_next))
-		###################################################################################################################################################
+		
+		if cbte_nro != cbte_nro_next:
+			self.raise_user_error('invalid_invoice_number', (cbte_nro, cbte_nro_next))
 
+		
 		# invoice number range (from - to) and date:
 		cbte_nro = cbt_desde = cbt_hasta = cbte_nro_next
 
@@ -811,9 +811,9 @@ class Invoice:
 		if digito == 10:
 			digito = 0
 		return str(digito)
-
-
 	
+
+
 	def crear_codigo_qr(self):
 		######################################################################################################################
 		#
@@ -895,7 +895,6 @@ class Invoice:
 		
 			self.write([self], vals)
 		return True
-
 
 
 	@classmethod
