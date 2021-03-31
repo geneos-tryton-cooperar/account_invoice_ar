@@ -13,6 +13,8 @@
     <!-- agregar cuit y tipo al encabezado -->
     <xpath expr="/form/group[@id='checkboxes']" position="after">
         <newline/>
+        <label name="tipo_documento"/>
+        <field name="tipo_documento"/>
         <label name="vat_number"/>
         <field name="vat_number"/>
         <label name="vat_country"/>

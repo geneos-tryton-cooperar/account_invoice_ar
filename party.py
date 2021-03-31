@@ -12,6 +12,47 @@ from actividades import CODES
 
 __all__ = ['Party', 'GetAFIPData', 'GetAFIPDataStart']
 
+TIPO_DOCUMENTO = [
+    ('0', 'CI Policia Federal'),
+    ('1', 'CI Buenos Aires'),
+    ('2', 'CI Catamarca'),
+    ('3', 'CI Cordoba'),
+    ('4', 'CI Corrientes'),
+    ('5', 'CI Entre Rios'),
+    ('6', 'CI Jujuy'),
+    ('7', 'CI Mendoza'),
+    ('8', 'CI La Rioja'),
+    ('9', 'CI Salta'),
+    ('10', 'CI San Juan'),
+    ('11', 'CI San Luis'),
+    ('12', 'CI Santa Fe'),
+    ('13', 'CI Santiago del Estero'),
+    ('14', 'CI Tucuman'),
+    ('16', 'CI Chaco'),
+    ('17', 'CI Chubut'),
+    ('18', 'CI Formosa'),
+    ('19', 'CI Misiones'),
+    ('20', 'CI Neuquen'),
+    ('21', 'CI La Pampa'),
+    ('22', 'CI Rio Negro'),
+    ('23', 'CI Santa Cruz'),
+    ('24', 'CI Tierra del Fuego'),
+    ('80', 'CUIT'),
+    ('86', 'CUIL'),
+    ('87', 'CDI'),
+    ('89', 'LE'),
+    ('90', 'LC'),
+    ('91', 'CI extranjera'),
+    ('92', 'en tramite'),
+    ('93', 'Acta nacimiento'),
+    ('94', 'Pasaporte'),
+    ('95', 'CI Bs. As. RNP'),
+    ('96', 'DNI'),
+    ('99', 'Sin identificar/venta global diaria'),
+    ('30', 'Certificado de Migracion'),
+    ('88', 'Usado por Anses para Padron'),
+]
+
 
 class Party(ModelSQL, ModelView):
     """Pary module, extended for account_invoice_ar"""
@@ -112,6 +153,12 @@ class Party(ModelSQL, ModelView):
             'readonly': ~Eval('active', True),
             },
         depends=['active'])
+    
+    tipo_documento = fields.Selection(TIPO_DOCUMENTO,
+                                      'Tipo documento', 
+                                      states={
+                                          'readonly': ~Eval('active', True),
+                                      }, required=True, depends=['active'])
 
     @staticmethod
     def default_vat_country():
