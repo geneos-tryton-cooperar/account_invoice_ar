@@ -433,8 +433,9 @@ class Invoice:
 						if not invoice.pyafipws_cae:
 							invoice.raise_user_error('not_cae')
 			invoice.set_number()
-			if invoice.pos.pos_type == 'electronic':
-				invoice.crear_codigo_qr()
+			if invoice.type == u'out_invoice' or invoice.type == u'out_credit_note':
+				if invoice.pos.pos_type == 'electronic':
+					invoice.crear_codigo_qr()
 			moves.append(invoice.create_move())
 		cls.write(invoices, {
 				'state': 'posted',
