@@ -17,7 +17,7 @@ import pyqrcode
 import io
 
 
-__all__ = ['Invoice', 'AfipWSTransaction', 'InvoiceReport']
+__all__ = ['Invoice', 'AfipWSTransaction', 'InvoiceReport', 'InvoiceCmpAsoc']
 __metaclass__ = PoolMeta
 
 _STATES = {
@@ -171,6 +171,31 @@ TIPO_COMPROBANTE = [
 ]
 
 
+INVOICE_ASOC_AFIP_CODE = {
+	'1': [3],
+	'2': [1, 3],
+	'3': [1, 2],
+	'6': [8],
+	'7': [6, 8],
+	'8': [6, 7],
+	'11': [13],
+	'12': [11, 13],
+	'13': [11, 12],
+	'19': [21],
+	'20': [19, 21],
+	'21': [19, 20],
+	'201': [203],
+	'202': [201, 203],
+	'203': [201, 202],
+	'206': [208],
+	'207': [206, 208],
+	'208': [206, 207],
+	'211': [213],
+	'212': [211, 213],
+	'213': [211, 212],
+	}
+
+
 _CREDIT_TYPE = {
 	None: None,
 	'out_invoice': 'out_credit_note',
@@ -178,6 +203,17 @@ _CREDIT_TYPE = {
 	'out_credit_note': 'out_invoice',
 	'in_credit_note': 'in_invoice',
 	}
+
+
+class InvoiceCmpAsoc(ModelSQL):
+	'Invoice - CmpAsoc (Invoice)'
+	__name__ = 'account.invoice-cmp.asoc'
+	_table = 'account_invoice_cmp_asoc'
+
+	invoice = fields.Many2One('account.invoice', 'Invoice',
+		ondelete='CASCADE', select=True, required=True)
+	cmp_asoc = fields.Many2One('account.invoice', 'Cmp Asoc',
+		ondelete='RESTRICT', required=True)
 
 
 
@@ -272,7 +308,20 @@ class Invoice:
 									'invisible': True,
 								})
 
-	
+	pyafipws_cmp_asoc = fields.Many2Many('account.invoice-cmp.asoc',
+			'invoice', 'cmp_asoc', 'Comprobantes asociados',
+			domain=[
+				('company', '=', Eval('company', -1)),
+				('type', '=', 'out_invoice'),
+				['OR',
+					('state', 'in', ['posted', 'paid']),
+					('id', 'in', Eval('pyafipws_cmp_asoc')),
+					],
+				],
+			states=_STATES,
+			depends=_DEPENDS + ['company', 'pyafipws_cmp_asoc'])
+
+
 	@classmethod
 	def default_invoice_type(cls):
 		return None
@@ -697,6 +746,31 @@ class Invoice:
 					# add the other tax detail in the helper
 					ws.AgregarTributo(tributo_id, desc, base_imp, alic, importe)
 
+			
+			
+			if (self.invoice_type.invoice_type in ('2', '3', '7', '8', '12',
+					'13', '202', '203', '207', '208', '212', '213')):
+				if not self.pyafipws_cmp_asoc:
+					raise self.raise_user_error(
+						'account_invoice_ar.msg_missing_cmp_asoc')
+				for cbteasoc in self.pyafipws_cmp_asoc:
+					cbteasoc_tipo = int(cbteasoc.invoice_type.invoice_type)
+					if cbteasoc_tipo not in INVOICE_ASOC_AFIP_CODE[
+							self.invoice_type.invoice_type]:
+						raise self.raise_user_error(
+							'account_invoice_ar.msg_invalid_cmp_asoc')
+					cbteasoc_nro = int(cbteasoc.number[-8:])
+					cbteasoc_fecha_cbte = cbteasoc.invoice_date.strftime(
+						'%Y-%m-%d')
+					if service != 'wsmtxca':
+						cbteasoc_fecha_cbte = cbteasoc_fecha_cbte.replace('-',
+							'')
+					ws.AgregarCmpAsoc(tipo=cbteasoc_tipo, pto_vta=punto_vta,
+						nro=cbteasoc_nro,
+						cuit=self.company.party.vat_number,
+						fecha=cbteasoc_fecha_cbte)
+
+
 				## Agrego un item:
 				#codigo = "PRO1"
 				#ds = "Producto Tipo 1 Exportacion MERCOSUR ISO 9001"
@@ -929,7 +1003,8 @@ class Invoice:
 			new_invoice.pyafipws_concept = invoice.pyafipws_concept
 			new_invoice.pyafipws_billing_start_date = invoice.pyafipws_billing_start_date
 			new_invoice.pyafipws_billing_end_date = invoice.pyafipws_billing_end_date
-
+			new_invoice.reference = '%s' % invoice.number
+			new_invoice.pyafipws_cmp_asoc = [invoice.id]
 			new_invoice.save()
 
 			Transaction().cursor.commit()

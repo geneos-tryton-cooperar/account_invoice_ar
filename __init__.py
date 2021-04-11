@@ -8,6 +8,7 @@ from .address import *
 
 def register():
     Pool.register(
+        InvoiceCmpAsoc,
         Pos,
         PosSequence,
         Invoice,
