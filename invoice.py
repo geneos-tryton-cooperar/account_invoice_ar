@@ -320,6 +320,13 @@ class Invoice:
 				],
 			states=_STATES,
 			depends=_DEPENDS + ['company', 'pyafipws_cmp_asoc'])
+	
+	periodo_start_date = fields.Date('Desde periodo asociado',
+											  states=_STATES, depends=_DEPENDS,
+											  help=u"Seleccionar fecha de fin del periodo - Sólo creditos y debitos")
+	periodo_end_date = fields.Date('Hasta periodo asociado',
+											states=_STATES, depends=_DEPENDS,
+											help=u"Seleccionar fecha de inicio del periodo - Sólo creditos y debitos")
 
 
 	@classmethod
@@ -750,25 +757,32 @@ class Invoice:
 			
 			if (self.invoice_type.invoice_type in ('2', '3', '7', '8', '12',
 					'13', '202', '203', '207', '208', '212', '213')):
-				if not self.pyafipws_cmp_asoc:
-					raise self.raise_user_error(
-						'account_invoice_ar.msg_missing_cmp_asoc')
-				for cbteasoc in self.pyafipws_cmp_asoc:
-					cbteasoc_tipo = int(cbteasoc.invoice_type.invoice_type)
-					if cbteasoc_tipo not in INVOICE_ASOC_AFIP_CODE[
-							self.invoice_type.invoice_type]:
+
+				if self.periodo_start_date and self.periodo_end_date:
+					periodo_asoc_desde = self.periodo_start_date.strftime("%Y%m%d")
+					periodo_asoc_hasta = self.periodo_end_date.strftime("%Y%m%d")
+					ws.AgregarPeriodoComprobantesAsociados(fecha_desde=periodo_asoc_desde, 
+						fecha_hasta=periodo_asoc_hasta)
+				else:
+					if not self.pyafipws_cmp_asoc:
 						raise self.raise_user_error(
-							'account_invoice_ar.msg_invalid_cmp_asoc')
-					cbteasoc_nro = int(cbteasoc.number[-8:])
-					cbteasoc_fecha_cbte = cbteasoc.invoice_date.strftime(
-						'%Y-%m-%d')
-					if service != 'wsmtxca':
-						cbteasoc_fecha_cbte = cbteasoc_fecha_cbte.replace('-',
-							'')
-					ws.AgregarCmpAsoc(tipo=cbteasoc_tipo, pto_vta=punto_vta,
-						nro=cbteasoc_nro,
-						cuit=self.company.party.vat_number,
-						fecha=cbteasoc_fecha_cbte)
+							'Para debitos o creditos debe seleccionar el comprobante origen o el periodo asociado.')
+					for cbteasoc in self.pyafipws_cmp_asoc:
+						cbteasoc_tipo = int(cbteasoc.invoice_type.invoice_type)
+						if cbteasoc_tipo not in INVOICE_ASOC_AFIP_CODE[
+								self.invoice_type.invoice_type]:
+							raise self.raise_user_error(
+								'account_invoice_ar.msg_invalid_cmp_asoc')
+						cbteasoc_nro = int(cbteasoc.number[-8:])
+						cbteasoc_fecha_cbte = cbteasoc.invoice_date.strftime(
+							'%Y-%m-%d')
+						if service != 'wsmtxca':
+							cbteasoc_fecha_cbte = cbteasoc_fecha_cbte.replace('-',
+								'')
+						ws.AgregarCmpAsoc(tipo=cbteasoc_tipo, pto_vta=punto_vta,
+							nro=cbteasoc_nro,
+							cuit=self.company.party.vat_number,
+							fecha=cbteasoc_fecha_cbte)
 
 
 				## Agrego un item:
