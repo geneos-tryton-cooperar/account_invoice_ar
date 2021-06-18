@@ -574,9 +574,7 @@ class Invoice:
 		# get the last invoice number registered in AFIP
 		if service == "wsfe" or service == "wsmtxca":
 			cbte_nro_afip = ws.CompUltimoAutorizado(tipo_cbte, punto_vta)
-			print 'XmlRequest ----', ws.XmlRequest, '---- Fin Request'
-			print 'XmlResponse ----', ws.XmlResponse, '---- Fin Response'
-
+			
 		elif service == 'wsfex':
 			cbte_nro_afip = ws.GetLastCMP(tipo_cbte, punto_vta)
 		cbte_nro_next = int(cbte_nro_afip or 0) + 1
