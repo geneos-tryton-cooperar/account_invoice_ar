@@ -647,6 +647,20 @@ class Invoice:
 			ctz = 1 / self.currency.rate
 			moneda_ctz =  str("%.2f" % ctz)
 
+		client_iva = self.party.iva_condition
+
+		if client_iva == 'responsable_inscripto':
+			condicion_iva_receptor_id = 1
+		elif client_iva == 'consumidor_final':
+			condicion_iva_receptor_id = 5
+		elif client_iva == 'exento':
+			condicion_iva_receptor_id = 4
+		elif client_iva == 'monotributo':
+			condicion_iva_receptor_id = 6
+		else:
+			condicion_iva_receptor_id = 0
+
+
 		# foreign trade data: export permit, country code, etc.:
 		if self.pyafipws_incoterms:
 			incoterms = self.pyafipws_incoterms
@@ -713,7 +727,7 @@ class Invoice:
 				cbt_desde, cbt_hasta, imp_total, imp_tot_conc, imp_neto,
 				imp_iva, imp_trib, imp_op_ex, fecha_cbte, fecha_venc_pago,
 				fecha_serv_desde, fecha_serv_hasta,
-				moneda_id, moneda_ctz)
+				moneda_id, moneda_ctz, condicion_iva_receptor_id)
 		elif service == 'wsmtxca':
 			ws.CrearFactura(concepto, tipo_doc, nro_doc, tipo_cbte, punto_vta,
 				cbt_desde, cbt_hasta, imp_total, imp_tot_conc, imp_neto,
