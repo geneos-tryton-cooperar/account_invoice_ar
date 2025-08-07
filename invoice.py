@@ -657,6 +657,8 @@ class Invoice:
 			condicion_iva_receptor_id = 4
 		elif client_iva == 'monotributo':
 			condicion_iva_receptor_id = 6
+		elif client_iva == 'no_alcanzado':
+			condicion_iva_receptor_id = 15
 		else:
 			condicion_iva_receptor_id = 0
 
@@ -990,7 +992,7 @@ class Invoice:
 			vals['qr_texto_modificado'] = string_qr		
 		
 			url = pyqrcode.create(string_qr, error='L', version=13, mode='binary')
-			with open('code.png', 'w') as fstream:
+			with open('/opt/tryton/tryton/code.png', 'w') as fstream:
 				url.png(fstream, scale=1)
 				buffer = io.BytesIO()
 				url.png(buffer)
